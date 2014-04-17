@@ -106,7 +106,7 @@ genname(Name,Vi) ->
 encode({type,Id,Type}, Fs0) ->
     FName = list_to_atom("enc_" ++ Id),
     {V0, R0} = genvar(#grec{}),
-    {Enc, R1} = enc_type(Type, V0, R0),
+    {Enc, _R1} = enc_type(Type, V0, R0),
     [ mkfunction(FName, 1, [mkclause([V0], [], [Enc])]) | Fs0].
 
 %% <<V:32>>
@@ -206,7 +206,7 @@ enc_type(double, V, R) ->
 enc_type(bool,V,R) ->
     enc_prim_type(bool, V, R);
 
-enc_type(void,V,R) ->
+enc_type(void,_V,R) ->
     { mknil(),  R};
 enc_type({type,Id}, V, R) ->
     { mkcall("enc_" ++ Id, [V]), R};
@@ -305,7 +305,7 @@ enc_type({varray,Max,Type}, V, R0) ->
 %%
 enc_type({struct, Elems}, V, R) ->
     {EL,VL,R1} = foldr(
-		   fun({Id,T}, {Enc0, VL, RR0}) ->
+		   fun({_Id,T}, {Enc0, VL, RR0}) ->
 			   {VV,RR1} = genvar(RR0),
 			   {Enc1,RR2} = enc_type(T, VV, RR1),
 			   {mkcons(Enc1,Enc0), [VV|VL], RR2}
@@ -325,7 +325,7 @@ enc_type({struct, Elems}, V, R) ->
 %%     end]
 %% end.
 %%
-enc_type({union, {{DId,DT}, Elems}}, V, R) ->
+enc_type({union, {{_DId,DT}, Elems}}, V, R) ->
     {V0,R1} = genvar(R),
     {V1,R2} = genvar(R1),
     {DEnc,R3} = enc_type(DT, V0, R2),
@@ -333,7 +333,7 @@ enc_type({union, {{DId,DT}, Elems}}, V, R) ->
 		 fun ({{default,_},{_,T}}, {CL0, R0}) ->
 			 {Enc,RR} = enc_type(T, V1, R0),
 			 {[mkclause([mkvar('_')],[],[Enc]) | CL0], RR};
-		     ({{Tag,Val},{Uid,T}}, {CL0, R0}) ->
+		     ({{Tag,_Val},{_Uid,T}}, {CL0, R0}) ->
 			 {Enc,RR} = enc_type(T, V1, R0),
 			 ETag =
 			     if
@@ -385,7 +385,7 @@ decode({type,Id,Type}, Fs0) ->
 	{enum, Nums} ->
 	    FName2 = list_to_atom("dec_" ++ Id ++ "_i2a"),
 	    {I_Int, R3} = genvar(R2),
-	    {Dec2, R4} = dec_enum_i2a(Nums, I_Int, R3),
+	    {Dec2, _R4} = dec_enum_i2a(Nums, I_Int, R3),
 	    F2 = mkfunction(FName2, 1, [mkclause([I_Int], [], [Dec2])]),
 	    [F1, F2 | Fs0];
 	_ ->
@@ -399,7 +399,7 @@ is_prim_dec_p(unsigned_hyper)     -> true;
 is_prim_dec_p(float)              -> true;
 is_prim_dec_p(double)             -> true;
 is_prim_dec_p(bool)               -> true;
-is_prim_dec_p({array, N, opaque}) -> true;
+is_prim_dec_p({array, _N, opaque}) -> true;
 is_prim_dec_p(_) -> false.
      
 
@@ -499,7 +499,7 @@ dec_enum_i2a(Nums, I_Int, R0) ->
 	     Nums),
     {mkcase(I_Int, CL), R0}.
     
-dec_compound(void, I_Bin, I_Off,R) ->
+dec_compound(void, _I_Bin, I_Off,R) ->
     {mktuple([mkatom(void), I_Off]), R};
 dec_compound({type,Id}, I_Bin, I_Off, R)  ->
     {mkcall("dec_" ++ Id, [I_Bin, I_Off]), R};
@@ -635,7 +635,7 @@ dec_compound({varray,Max,Type}, I_Bin, I_Off, R0) ->
 dec_compound({struct, Elems}, I_Bin, I_Off, R0) ->
     {Decs, Vals, O_NOff, R1} = 
 	foldl(
-	  fun({Id,Type}, {Decs, Vals, Off, RR1}) ->
+	  fun({_Id,Type}, {Decs, Vals, Off, RR1}) ->
 		  {Val_i,RR2} = genvar(RR1),
 		  {Off_i,RR3} = genvar(RR2),
 		  {Dec, RR4} = 
@@ -671,7 +671,7 @@ dec_compound({struct, Elems}, I_Bin, I_Off, R0) ->
 %% end
 %%
 %%
-dec_compound({union, X={{DId,DT}, Elems}}, I_Bin, I_Off, R0) ->
+dec_compound({union, _X={{_DId,DT}, Elems}}, I_Bin, I_Off, R0) ->
     {Tag,R1} = genvar(R0),
     {Val,R2} = genvar(R1),
     {O_NOff,R3} = genvar(R2),
@@ -705,7 +705,7 @@ dec_compound({union, X={{DId,DT}, Elems}}, I_Bin, I_Off, R0) ->
 					 O_NOff]),
 			  {[mkclause([mkvar('_')],[],[Dec, Ret])|CL0], RR1}
 		  end;
-	      ({{UTag,UTagV},{Uid,Type}}, {CL0,RR0}) ->
+	      ({{UTag,UTagV},{_Uid,Type}}, {CL0,RR0}) ->
 		  {Dec, RR1} =
 		      mk_type_match(Type,I_Bin,T_Off,Val,O_NOff,RR0),
 		  ETag = mkint(UTagV),
@@ -782,10 +782,10 @@ align(Len) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-clnt({program,Id,Prog,Vs}, Fs0) ->
+clnt({program,_Id,Prog,Vs}, Fs0) ->
     clnt_versions(Vs, Prog, Fs0).
 
-clnt_versions([{version,Id,Ver,Ps} | Vs], Prog, Fs0) ->
+clnt_versions([{version,_Id,Ver,Ps} | Vs], Prog, Fs0) ->
     Fs1 = clnt_procs(Ps, Prog, Ver, Fs0),
     clnt_versions(Vs, Prog, Fs1);
 clnt_versions([], _, Fs0) -> Fs0.
@@ -808,7 +808,7 @@ clnt_procs([{procedure,Name,Proc,Ret,Args} | Ps], Prog, Ver, Fs0) ->
     clnt_procs(Ps, Prog, Ver, [F0, F1 | Fs0]);
 clnt_procs([], _, _, Fs0) -> Fs0.
 
-clnt_call(FName,Args,Ret,Proc,Ver,Prog) ->
+clnt_call(FName,Args,Ret,Proc,_Ver,_Prog) ->
     R0 = #grec{},
     {EL,VL,R1} = foldr(
 		   fun(T, {Enc0, VL, RR0}) ->
@@ -819,7 +819,7 @@ clnt_call(FName,Args,Ret,Proc,Ver,Prog) ->
     {I_Args,R2} = genvar(R1),
     {O_Res,R3} = genvar(R2),
     Assign = mkmatch(I_Args, EL),
-    {Dec,R4} = dec_type(Ret, O_Res, mkint(0), R3),
+    {Dec,_R4} = dec_type(Ret, O_Res, mkint(0), R3),
     Case = mkcase(mkcall(rpc_client, call,
 			 [mkvar('Clnt'),
 			  mkint(Proc),
@@ -851,7 +851,7 @@ svc_gen_funcs(Type, Base, Fs0) ->
 	    svc_genprocs_rs(Serv, Fs0)
     end.
 
-svc_prog({program,Id,Prog,Vs},Type,Base,Fs0) ->
+svc_prog({program,Id,_Prog,Vs},Type,Base,Fs0) ->
     Serv = Base ++ "_server",
     if Type == gen_server ->
 	    svc_versions_gs(Vs, Id, Serv, Fs0);
@@ -903,7 +903,7 @@ svc_genprocs_gs(Serv, Fs0) ->
 svc_versions_gs(Vsns, ProgId, Serv, Fs0) ->
     svc_versions_gen(Vsns, ProgId, Serv, Fs0, fun svc_procs_gs/8).
 
-svc_versions_gen([{version,Id,Ver,Ps} | Vs], ProgId, Serv, Fs0,ProcFun) ->
+svc_versions_gen([{version,_Id,Ver,Ps} | Vs], ProgId, Serv, Fs0,ProcFun) ->
     Bin = mkvar('Bin'),
     Off = mkvar('Offset'),
     R0 = #grec{},
@@ -936,7 +936,7 @@ svc_procs_gs([{procedure,Name,Proc,Ret,Args} | Ps],
     svc_procs_gs(Ps, ProgId, Serv, Ver, Bin, Off, R0, [CL | CLs]);
 svc_procs_gs([], _, _, _, _, _, _, CLs) -> CLs.
 
-svc_call_gs(Name,Proc,Args,Ret,ProgId,Serv,Ver,Bin,Off,R0) ->
+svc_call_gs(Name,Proc,Args,Ret,_ProgId,Serv,Ver,Bin,Off,R0) ->
     {DL, As, _Off, R1} = gen_call_dec(Bin, Off, R0, Args),
     E1 = mkmatch(
 	   mkvar('Res'),
@@ -945,7 +945,7 @@ svc_call_gs(Name,Proc,Args,Ret,ProgId,Serv,Ver,Bin,Off,R0) ->
 		   mktuple([mkatom(genname(Name,Ver)) | reverse(As)] ++
 			   [mkvar('Clnt')]),
 		   mkatom(infinity)])),
-    {E2,R2} = enc_type(Ret, mkvar('Res'), R1),
+    {E2,_R2} = enc_type(Ret, mkvar('Res'), R1),
     E3 = mktuple([mkatom(success), E2, mklist([])]),
     mkclause([mkint(Proc)], [], reverse(DL) ++ [E1,E3]).
 
@@ -963,7 +963,7 @@ svc_genprocs_rs(Serv, Fs0) ->
 		       [mkclause([VReq, VFrom, VS], [],
 				 [mkcall(Serv, handle_call,
 					 [VReq, VFrom, VS])])]),
-    NoReply = mktuple([mkatom(noreply), mklist([])]),
+    _NoReply = mktuple([mkatom(noreply), mklist([])]),
     HCast = mkfunction(handle_cast, 2,
 		       [mkclause([VReq, VS], [],
 				 [mkcall(Serv, handle_cast,
@@ -1006,9 +1006,9 @@ svc_procs_rs([{procedure,Name,Proc,Ret,Args} | Ps],
     svc_procs_rs(Ps, ProgId, Serv, Ver, Bin, Off, R0, [CL | CLs]);
 svc_procs_rs([], _, _, _, _, _, _, CLs) -> CLs.
 
-svc_call_rs(Name,Proc,Args,Ret,ProgId,Serv,Ver,Bin,Off,R0) ->
+svc_call_rs(Name,Proc,Args,Ret,_ProgId,Serv,Ver,Bin,Off,R0) ->
     {DL, As, _Off, R1} = gen_call_dec(Bin, Off, R0, Args),
-    {E2,R2} = enc_type(Ret, mkvar('Res'), R1),
+    {E2,_R2} = enc_type(Ret, mkvar('Res'), R1),
     E1 = mkcase(mkcatch(mkcall(Serv, genname(Name,Ver),
 			       reverse(As) ++ [mkvar('Clnt'), mkvar('State')])),
 		[mkclause([mktuple([mkatom(reply), mkvar('Res'),

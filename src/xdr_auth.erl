@@ -18,11 +18,11 @@ public_key(Secret) ->
 common_key(Public, Secrete) ->
     pow(Public, Secrete, ?MODULUS).
 
-get_public_key(User) ->
+get_public_key(_User) ->
     %% read the public key for the user 'User' from key-file
     0.
 
-get_secret_key(ID) ->
+get_secret_key(_ID) ->
     %% read the encrypted secret key for user 'User' from key-file
     0.
 
@@ -40,7 +40,7 @@ generate_secret_key() ->
 des_key(Key) ->
     des_key(Key bsr 64, 8, Key band 1, []).
 
-des_key(X, 0, _, DKs) -> DKs;
+des_key(_X, 0, _, DKs) -> DKs;
 des_key(X, N, P, DKs) ->
     des_key(X bsr 8, N-1, P, [((X band 16#ff) bxor P) | DKs]).
 
@@ -58,7 +58,7 @@ pow(X, N, M) ->
 key_to_hex(X) ->
     key_to_hex(X, 24, []).
 
-key_to_hex(X, 0, Ds) -> Ds;
+key_to_hex(_X, 0, Ds) -> Ds;
 key_to_hex(X, N, Ds) ->
     B = X band 16#ff,
     key_to_hex(X bsr 8, N-1, [hex((B bsr 4) band 16#f),hex(B band 16#f)|Ds]).

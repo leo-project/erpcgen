@@ -65,7 +65,7 @@ scan_comment([$\n | Cs], Ts, Line) ->
     scan_comment(Cs,Ts,Line+1);
 scan_comment([_ | Cs], Ts, Line) -> 
     scan_comment(Cs, Ts, Line);
-scan_comment([], Ts, Line) -> 
+scan_comment([], _Ts, Line) -> 
     throw({error, {Line, ?MODULE, "comment not terminated"}}).
 
 %%
