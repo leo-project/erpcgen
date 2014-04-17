@@ -34,7 +34,7 @@
 -export([start_link/7, start_link/8, client_ip/1, client_socket/1, reply/3]).
 
 %% gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 %% Internal exports
 -export([listener/2]).
@@ -87,7 +87,7 @@ start_link(Name, Protos, PrgNum, PrgName, PrgVsnLo, PrgVsnHi, Mod, InitArgs) ->
     gen_server:start_link(Name, ?MODULE, [S], []).
 
 init_state(Protos, PrgNum, PrgName, PrgVsnLo, PrgVsnHi, Mod, InitArgs)
-  when integer(PrgNum), atom(PrgName), integer(PrgVsnLo), integer(PrgVsnHi),
+  when is_integer(PrgNum), is_atom(PrgName), is_integer(PrgVsnLo), is_integer(PrgVsnHi),
        PrgVsnLo =< PrgVsnHi ->
     S = protos(Protos, #state{}),
     {ok, State} = apply(Mod, init, [InitArgs]),
@@ -224,6 +224,9 @@ terminate(Reason, S) ->
     unregister_with_portmapper(S#state.udp, S),
     apply(S#state.mod, terminate, [Reason, S#state.state]).    
 
+code_change(_OldVsn, State, _Extra) ->
+    {ok, State}.
+
 %%%----------------------------------------------------------------------
 %%% Internal functions
 %%%----------------------------------------------------------------------
@@ -255,7 +258,7 @@ handle_msg1(Msg, Sock, Addr, S) ->
     Fun = chk_prg(Prg, Vsn, S, Clnt1),
     %% Ok, we're ready to call the implementation
     case (catch apply(S#state.mod, Fun, [Proc,Msg,Off,Clnt1,S#state.state])) of
-	X = {success, Bytes, NState} ->
+	X = {success, _Bytes, _NState} ->
 	    {accepted, X, Clnt1};
 	{garbage_args, NState} ->
 	    {accepted, {garbage_args, [], NState}, Clnt1};
@@ -308,9 +311,7 @@ chk_prg(Prg, Vsn, S, Clnt) ->
 			   {'PROG_MISMATCH', 
 			    element(1, hd(S#state.prg_vsns)),
 			    element(1, lists:last(S#state.prg_vsns))}})
-	    end;
-	true ->
-	    ok
+	    end
     end.
     
 send_reply(Clnt, Reply) when Clnt#client.addr == sock ->
@@ -379,8 +380,8 @@ register_with_portmapper(SockS, S) ->
 unregister_with_portmapper(SockS, S) ->
     pmap_reg(SockS, S, unset).
 
-pmap_reg(undefined, S, _Func) -> ok;
-pmap_reg(#sock_s{pmap_p = false}, S, _Func) -> ok;
+pmap_reg(undefined, _S, _Func) -> ok;
+pmap_reg(#sock_s{pmap_p = false}, _S, _Func) -> ok;
 pmap_reg(#sock_s{port = Port, proto = Proto},
 	 #state{prg_num = Prg, prg_vsns = Vsns},
 	 Func) ->
@@ -405,11 +406,11 @@ io_list_len(L) -> io_list_len(L, 0).
 io_list_len([H|T], N) ->
     if
 	H >= 0, H =< 255 -> io_list_len(T, N+1);
-	list(H) -> io_list_len(T, io_list_len(H,N));
-	binary(H) -> io_list_len(T, size(H) + N);
+	is_list(H) -> io_list_len(T, io_list_len(H,N));
+	is_binary(H) -> io_list_len(T, size(H) + N);
 	true -> exit({xdr, opaque})
     end;
-io_list_len(H, N) when binary(H) ->
+io_list_len(H, N) when is_binary(H) ->
     size(H) + N;
 io_list_len([], N) ->
     N.

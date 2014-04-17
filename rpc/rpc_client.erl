@@ -177,10 +177,10 @@ set_retry_timeout(Clnt, Time) -> control(Clnt, set_retry_timeout, Time).
 set_auth(Clnt, Auth)	-> control(Clnt, set_auth, Auth).
 get_queue_length(Clnt) -> control(Clnt, get_queue_length).
 
-control(Clnt, Attr, Param) when atom(Attr) ->
+control(Clnt, Attr, Param) when is_atom(Attr) ->
     gen_server:call(Clnt, {Attr, Param}, infinity).
 
-control(Clnt, Attr) when atom(Attr) ->
+control(Clnt, Attr) when is_atom(Attr) ->
     gen_server:call(Clnt, Attr, infinity).
 
 get_stats(Clnt) -> gen_server:call(Clnt, get_stats, infinity).
@@ -192,7 +192,7 @@ get_and_reset_stats(Clnt, Timeout) ->
     gen_server:call(Clnt, get_and_reset_stats, Timeout).
 
 %%% Cause client process to unlink from caller and link to NewOwner.
-controlling_process(Clnt, NewOwner) when pid(NewOwner) ->
+controlling_process(Clnt, NewOwner) when is_pid(NewOwner) ->
     gen_server:call(Clnt, {set_owner, NewOwner}, infinity).
 
 %%----------------------------------------------------------------------
@@ -210,7 +210,7 @@ init([Host, Program, Version, Proto, Port]) ->
 		 auth = {None, None} },
     S1 = call_const(S0),
     case inet:getaddr(Host, inet) of
-	{ok, IP} when integer(Port) ->
+	{ok, IP} when is_integer(Port) ->
 	    case Proto of
 		tcp ->
 		    case gen_tcp:connect(IP, Port,[binary,{packet,sunrm}]) of
@@ -237,7 +237,7 @@ init([Host, Program, Version, Proto, Port]) ->
 %%----------------------------------------------------------------------
 
 terminate(Reason, #state{proto = Proto, socket=Socket,
-			 pending=Pending, pendinglen = PendingLen}) ->
+			 pending=Pending, pendinglen = _PendingLen}) ->
     F = fun (#pending{from=From}) ->
 		gen_server:reply(From, {error, Reason})
 	end,
@@ -276,7 +276,7 @@ handle_call({call_bulk,Procedure,Params, BulkData, Timeout}, From, State) ->
 	true ->
 	    make_call_bulk(Procedure, Params, BulkData, Timeout, From, State)
     end;
-handle_call(close, From, State) ->
+handle_call(close, _From, State) ->
     case State#state.pendinglen of
 	0 -> {stop, normal, ok, State};
 	_ -> {reply, ok, State#state{ stopping = true }}
@@ -338,7 +338,7 @@ handle_call({set_owner, NewOwner}, From, State) ->
     link(NewOwner),
     unlink(Owner),
     {reply, ok, State};
-handle_call(Req, _From, State) ->
+handle_call(_Req, _From, State) ->
     {reply, {error, bad_attribute}, State}.
 
 %%----------------------------------------------------------------------
@@ -347,7 +347,7 @@ handle_call(Req, _From, State) ->
 %%          {noreply, State, Timeout} |
 %%          {stop, Reason, State}            (terminate/2 is called)
 %%----------------------------------------------------------------------
-handle_cast(Msg, State) ->
+handle_cast(_Msg, State) ->
     {noreply, State}.
 
 %%----------------------------------------------------------------------
@@ -357,7 +357,7 @@ handle_cast(Msg, State) ->
 %%          {stop, Reason, State}            (terminate/2 is called)
 %%----------------------------------------------------------------------
 
-handle_info({udp, Socket, IP, Port, Packet}, State) ->
+handle_info({udp, _Socket, _IP, _Port, Packet}, State) ->
     reply(Packet, State);
 handle_info({tcp, _Socket, Packet}, State) ->
     %% Over TCP, reply records may be diveded into fragments.
@@ -374,9 +374,9 @@ handle_info({tcp, _Socket, Packet}, State) ->
 	    {noreply, State#state{tcp_blocks = [Blocks, Block]}}
     end;
 
-handle_info({tcp_closed, Socket}, State) ->
+handle_info({tcp_closed, _Socket}, State) ->
     {stop, shutdown, State};
-handle_info({udp_closed, Socket}, State) ->
+handle_info({udp_closed, _Socket}, State) ->
     {stop, shutdown, State};
 
 handle_info({retry, Xid}, State) ->
@@ -385,7 +385,7 @@ handle_info({retry, Xid}, State) ->
 handle_info({timeout, Xid}, State) ->
     do_timeout(Xid, State);
 
-handle_info(Info, State) ->
+handle_info(_Info, State) ->
     {noreply, State}.
 
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
@@ -497,11 +497,11 @@ reply(Record, State) ->
 %%% Decode reply RPC header and translate errors to Erlang descriptions.
 %%% May crash upon mismatch (caught).
 
-make_reply(Bin, State) ->
+make_reply(Bin, _State) ->
     case catch rpc_xdr:dec_rpc_msg(Bin, 0) of
-	{{Xid, {'REPLY', Body}}, ParOff} ->
+	{{_Xid, {'REPLY', Body}}, ParOff} ->
 	    case Body of
-		{'MSG_ACCEPTED', {Verf, Stat}} ->
+		{'MSG_ACCEPTED', {_Verf, Stat}} ->
 		    case Stat of
 			{'SUCCESS', _Null} ->
 			    <<_:ParOff/binary,Params/binary>> = Bin,
@@ -533,7 +533,7 @@ make_reply(Bin, State) ->
 %%% Runtime statistics and performance monitoring.
 
 %%% Update the statistics based on a successful RPC.
-update_stats(S, P) when record(S, statistics), record(P, pending) ->
+update_stats(S, P) when is_record(S, statistics), is_record(P, pending) ->
     Dt = now_diff(now(), P#pending.start_time),
     Dt2 = Dt * Dt,
     S#statistics{
@@ -545,7 +545,7 @@ update_stats(S, P) when record(S, statistics), record(P, pending) ->
     }.
 
 %%% Translate the accumulated statistics to a list of reports.
-compute_stats(State, Now) when record(State, state) ->
+compute_stats(State, Now) when is_record(State, state) ->
     S = State#state.statistics,
     DeltaT = now_diff(Now, S#statistics.start_time),
     N = S#statistics.replies,
@@ -568,7 +568,7 @@ compute_stats(State, Now) when record(State, state) ->
         {dev_latency, DevLatency}
     ].
 
-prettyify_stats(State, Now) ->
+prettyify_stats(State, _Now) ->
     Stats = State#state.statistics,
     lists:append([[
 		   {ip, State#state.ip},
@@ -596,7 +596,7 @@ now_diff({MegaSec1, Sec1, MicroSec1}, {MegaSec2, Sec2, MicroSec2}) ->
 
 do_retry(Xid, State) ->
     case keysearchdel(Xid, #pending.xid, State#state.pending) of
-	{Pend, Rest} ->
+	{Pend, _Rest} ->
 	    case gen_udp:send(State#state.socket, Pend#pending.packet) of
 		ok ->
 		    {noreply, incr_retries_stats(State)};
@@ -666,11 +666,11 @@ io_list_len(L) -> io_list_len(L, 0).
 io_list_len([H|T], N) ->
     if
 	H >= 0, H =< 255 -> io_list_len(T, N+1);
-	list(H) -> io_list_len(T, io_list_len(H,N));
-	binary(H) -> io_list_len(T, size(H) + N);
+	is_list(H) -> io_list_len(T, io_list_len(H,N));
+	is_binary(H) -> io_list_len(T, size(H) + N);
 	true -> exit({xdr, opaque})
     end;
-io_list_len(H, N) when binary(H) ->
+io_list_len(H, N) when is_binary(H) ->
     size(H) + N;
 io_list_len([], N) ->
     N.
@@ -690,7 +690,7 @@ keysearchdel([H|T], Key, N, Acc) when element(N, H) == Key ->
     {H, Acc ++ T};
 keysearchdel([H|T], Key, N, Acc) ->
     keysearchdel(T, Key, N, [H|Acc]);
-keysearchdel([], Key, N, Acc) ->
+keysearchdel([], _Key, _N, _Acc) ->
     false.
 
 call_const(S) ->
