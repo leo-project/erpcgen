@@ -243,11 +243,11 @@ gen_xdr_base(Fd, _Base, Spec, Type) ->
     end,
     put(type_module, []),
     foreach(
-      fun({type,Id,_Type}) ->
-	      [Enc] = xdrgen:encode({type,Id,Type}, []),
+      fun({type,Id,XDRDataType}) ->
+	      [Enc] = xdrgen:encode({type,Id,XDRDataType}, []),
 	      emit_fun(Fd, Enc),
 	      foreach(fun(Dec) -> emit_fun(Fd, Dec) end,
-		      xdrgen:decode({type,Id,Type}, []));
+		      xdrgen:decode({type,Id,XDRDataType}, []));
 	 (_) ->
 	      true
       end, Spec),
