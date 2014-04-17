@@ -264,7 +264,7 @@ gen_map_elem(true, Fd) ->
 	      "map_elem(Fun, Bin, Off, Max, N) when N =< Max ->\n"
 	      "  map_elem0(Fun, Bin, Off, N, []).\n"
 	      "\n"
-	      "map_elem0(Fun, Bin, Off, 0, L) ->\n"
+	      "map_elem0(_Fun, _Bin, Off, 0, L) ->\n"
 	      "  {lists:reverse(L,[]), Off};\n"
 	      "map_elem0(Fun, Bin, Off, N, L) ->\n"
 	      "  {E,Off1} = Fun(Bin, Off),\n"
