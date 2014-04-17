@@ -232,14 +232,17 @@ gen_xdr_base(Base, Spec, _Env, Opts, Type) ->
 
 gen_xdr_base(Fd, _Base, Spec, Type) ->
     if Type == mod ->
-	    foreach(
-	      fun({type,Id,_}) ->
-		      io:format(Fd, "-export([enc_~s/1, dec_~s/2]).~n",[Id,Id]);
-		 (_) ->
-		      true
-	      end, Spec);
+        foreach(
+          fun({type,Id,{enum, _}}) ->
+              %% export dec_$ID_i2a if type is enum to suppress unused warnings
+              io:format(Fd, "-export([enc_~s/1, dec_~s/2, dec_~s_i2a/1]).~n",[Id,Id,Id]);
+          ({type,Id,_}) ->
+              io:format(Fd, "-export([enc_~s/1, dec_~s/2]).~n",[Id,Id]);
+          (_) ->
+              true
+          end, Spec);
        Type == inc ->
-	    ok
+          ok
     end,
     put(type_module, []),
     foreach(
