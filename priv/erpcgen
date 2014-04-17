@@ -82,7 +82,7 @@ esac
 
 noxoutfile=`echo $outfile | sed 's;.x$;;'`
 
-%ERL% -pa $lib_path -noshell \
+erl -pa $lib_path -noshell \
 	-s erpcgen start -s erlang halt -- \
 	-infile $noxinfile -outfile $noxoutfile -options $optarg
 

@@ -11,3 +11,5 @@ rpc/rpc.hrl
 rpc/rpc_clnt.erl
 rpc/rpc_xdr.erl
 src/xdr_parse.erl
+rebar
+examples/*/*.[eh]rl
