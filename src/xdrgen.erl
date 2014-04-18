@@ -844,7 +844,7 @@ clnt_call(FName,Args,Ret,Proc,_Ver,_Prog) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 svc_gen_funcs(Type, Base, Fs0) ->
-    Serv = Base ++ "_server",
+    Serv = filename:basename(Base ++ "_server"),
     if Type == gen_server ->
 	    svc_genprocs_gs(Serv, Fs0);
        Type == rpc_server ->
@@ -852,7 +852,7 @@ svc_gen_funcs(Type, Base, Fs0) ->
     end.
 
 svc_prog({program,Id,_Prog,Vs},Type,Base,Fs0) ->
-    Serv = Base ++ "_server",
+    Serv = filename:basename(Base ++ "_server"),
     if Type == gen_server ->
 	    svc_versions_gs(Vs, Id, Serv, Fs0);
        Type == rpc_server ->

@@ -213,7 +213,8 @@ gen_xdr_base(Base, Spec, _Env, Opts, Type) ->
 	{ok, Fd} ->
 	    if Type == mod ->
 		    gen_header(Fd, Module),
-		    io:format(Fd, "-module(~s).~n", [Module]),
+            % avoid hierarchial module name
+            io:format(Fd, "-module(~s).~n", [filename:basename(Module)]),
 		    case lists:member(trace, Opts) of
 			true -> io:format(Fd, "-compile([verbose, "
 					  "report_errors, report_warnings, "
@@ -331,12 +332,13 @@ gen_clnt(Base, Spec, _Env, Opts) ->
     case file:open(File, write) of
 	{ok, Fd} ->
 	    gen_header(Fd, Module),
-	    io:format(Fd, "-module(~s).~n", [Module]),
+        % avoid hierarchial module name
+        io:format(Fd, "-module(~s).~n", [filename:basename(Module)]),
 	    case lists:member(trace, Opts) of
 		true -> io:format(Fd, "-compile([verbose, report_errors, report_warnings, trace]).~n", []);
 		_ -> skip_it
 	    end,
-	    io:format(Fd, "-include(\"~s\").~n", [Base ++ ".hrl"]),
+        io:format(Fd, "-include(\"~s\").~n", [filename:basename(Base )++ ".hrl"]),
 	    gen_clnt(Fd, Base, Spec),
 	    file:close(Fd);
 	{error, Reason} ->
@@ -360,7 +362,7 @@ gen_clnt(Fd, Base, Spec) ->
 	  (_) -> 
 	      true
       end, Spec),
-    put(type_module, list_to_atom(concat([Base,"_xdr"]))),
+    put(type_module, list_to_atom(concat([filename:basename(Base),"_xdr"]))),
     foreach(
       fun ({program,Id,Prog,Vers}) ->
 	      Es = xdrgen:clnt({program,Id,Prog,Vers}, []),
@@ -383,12 +385,13 @@ gen_svc(Base, Spec, _Env, Opts, Type) ->
     case file:open(File, write) of
 	{ok, Fd} ->
 	    gen_header(Fd, Module),
-	    io:format(Fd, "-module(~s).~n", [Module]),
+        % avoid hierarchial module name
+        io:format(Fd, "-module(~s).~n", [filename:basename(Module)]),
 	    case lists:member(trace, Opts) of
 		true -> io:format(Fd, "-compile([verbose, report_errors, report_warnings, trace]).~n", []);
 		_ -> skip_it
 	    end,
-	    io:format(Fd, "-include(\"~s\").~n", [Base ++ ".hrl"]),
+        io:format(Fd, "-include(\"~s\").~n", [filename:basename(Base )++ ".hrl"]),
 	    gen_svc(Fd, Base, Spec, Type),
 	    file:close(Fd);
 	{error, Reason} ->
@@ -441,7 +444,7 @@ gen_svc(Fd, Base, Spec, Type) ->
       end, Spec),
     io:format(Fd, "-export([init/1, handle_call/3, handle_cast/2, \n"
 	          "         handle_info/2, terminate/2]).\n", []),
-    put(type_module, list_to_atom(concat([Base,"_xdr"]))),
+    put(type_module, list_to_atom(concat([filename:basename(Base),"_xdr"]))),
     Fs = xdrgen:svc_gen_funcs(Type, Base, []),
     foreach(fun(F) -> emit_fun(Fd, F) end, Fs),
     foreach(
