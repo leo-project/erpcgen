@@ -939,13 +939,13 @@ svc_procs_gs([], _, _, _, _, _, _, CLs) -> CLs.
 svc_call_gs(Name,Proc,Args,Ret,_ProgId,Serv,Ver,Bin,Off,R0) ->
     {DL, As, _Off, R1} = gen_call_dec(Bin, Off, R0, Args),
     E1 = mkmatch(
-	   mkvar('Res'),
+	   mkvar('_Res'),
 	   mkcall(gen_server, call, 
 		  [mkatom(Serv),
 		   mktuple([mkatom(genname(Name,Ver)) | reverse(As)] ++
 			   [mkvar('Clnt')]),
 		   mkatom(infinity)])),
-    {E2,_R2} = enc_type(Ret, mkvar('Res'), R1),
+    {E2,_R2} = enc_type(Ret, mkvar('_Res'), R1),
     E3 = mktuple([mkatom(success), E2, mklist([])]),
     mkclause([mkint(Proc)], [], reverse(DL) ++ [E1,E3]).
 
@@ -1008,10 +1008,10 @@ svc_procs_rs([], _, _, _, _, _, _, CLs) -> CLs.
 
 svc_call_rs(Name,Proc,Args,Ret,_ProgId,Serv,Ver,Bin,Off,R0) ->
     {DL, As, _Off, R1} = gen_call_dec(Bin, Off, R0, Args),
-    {E2,_R2} = enc_type(Ret, mkvar('Res'), R1),
+    {E2,_R2} = enc_type(Ret, mkvar('_Res'), R1),
     E1 = mkcase(mkcatch(mkcall(Serv, genname(Name,Ver),
 			       reverse(As) ++ [mkvar('Clnt'), mkvar('State')])),
-		[mkclause([mktuple([mkatom(reply), mkvar('Res'),
+		[mkclause([mktuple([mkatom(reply), mkvar('_Res'),
 				    mkvar('NState')])], [],
 			  [mktuple([mkatom(success), E2, mkvar('NState')])]),
 		 mkclause([mkvar('Else')], [], [mkvar('Else')])]),
