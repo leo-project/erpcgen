@@ -475,7 +475,7 @@ reply(Record, State) ->
     Pending = State#state.pending,
     case keysearchdel(Xid, #pending.xid, Pending) of
 	{P, Rest} ->
-	    lists:foreach({erlang, cancel_timer}, P#pending.timers),
+	    lists:foreach(fun erlang:cancel_timer/1, P#pending.timers),
 	    Reply = make_reply(Record, State),
 	    gen_server:reply(P#pending.from, Reply),
 	    Stats = State#state.statistics,
