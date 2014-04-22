@@ -235,6 +235,8 @@ handle_msg(Msg, Sock, Addr, S) ->
 	{accepted, {Status, Bytes, NState}, Clnt} ->
 	    do_reply(Status, Bytes, Clnt),
 	    S#state{state = NState};
+	{accepted, {_ErrorStatus, _ErrorDetail} = ErrorRep, Clnt} ->
+	    do_reply(ErrorRep, Clnt);
 	{rejected, Clnt, RejectBody, NState} ->
 	    Reply = {Clnt#client.xid, {'REPLY', {'MSG_DENIED', RejectBody}}},
 	    send_reply(Clnt, rpc_xdr:enc_rpc_msg(Reply)),
@@ -271,6 +273,10 @@ handle_msg1(Msg, Sock, Addr, S) ->
 	    {accepted, {error, [], S#state.state}, Clnt1}
     end.
     
+do_reply(ErrorRep, Clnt) ->
+    Reply = accepted(Clnt, ErrorRep),
+    send_reply(Clnt, rpc_xdr:enc_rpc_msg(Reply)).
+
 do_reply(success, Bytes, Clnt) ->
     Reply = accepted(Clnt, {'SUCCESS', <<>>}),
     send_reply(Clnt, [rpc_xdr:enc_rpc_msg(Reply), Bytes]);
@@ -302,15 +308,15 @@ chk_auth(_,_, Clnt) -> throw({rejected, Clnt, {'AUTH_ERROR', 'AUTH_TOOWEAK'}}).
 chk_prg(Prg, Vsn, S, Clnt) ->
     if
 	Prg /= S#state.prg_num ->
-	    throw({accepted, Clnt, {'PROG_UNAVAIL', void}});
+	    throw({accepted, {'PROG_UNAVAIL', void}, Clnt});
 	true ->
 	    case lists:keysearch(Vsn, 1, S#state.prg_vsns) of
 		{value, {_, Fun}} -> Fun;
 		_ ->
-		    throw({accepted, Clnt,
-			   {'PROG_MISMATCH', 
-			    element(1, hd(S#state.prg_vsns)),
-			    element(1, lists:last(S#state.prg_vsns))}})
+            throw({accepted,
+                {'PROG_MISMATCH', 
+                      {element(1, hd(S#state.prg_vsns)),
+                       element(1, lists:last(S#state.prg_vsns))}}, Clnt})
 	    end
     end.
     
