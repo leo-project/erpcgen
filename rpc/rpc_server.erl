@@ -236,7 +236,8 @@ handle_msg(Msg, Sock, Addr, S) ->
 	    do_reply(Status, Bytes, Clnt),
 	    S#state{state = NState};
 	{accepted, {_ErrorStatus, _ErrorDetail} = ErrorRep, Clnt} ->
-	    do_reply(ErrorRep, Clnt);
+        do_reply(ErrorRep, Clnt),
+        S;
 	{rejected, Clnt, RejectBody, NState} ->
 	    Reply = {Clnt#client.xid, {'REPLY', {'MSG_DENIED', RejectBody}}},
 	    send_reply(Clnt, rpc_xdr:enc_rpc_msg(Reply)),
