@@ -4,7 +4,11 @@
   {vsn, "%VSN%"},
   {modules, [%MODULES%]},
   {registered, []},
-  {applications, [kernel, stdlib]}
+  {applications, [kernel, stdlib, ranch]}
+  {mod, {rpc_app, [{nb_acceptor, 128},
+                   {trans_opts, []},
+                   {prot_mod, void},
+                   {prot_opts, []}]}},
  ]
 }.
 
