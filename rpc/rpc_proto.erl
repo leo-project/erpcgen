@@ -15,12 +15,9 @@
     xid,
     rverf}).
 
-% comment out for debug
-%%%-include("rpc.hrl").
+-include("rpc.hrl").
 -include("rpc_app.hrl").
-% add define for debug
 
--define(RPC_VERSION_2, 2).
 -define(LOCALHOST_ADDR, {127, 0, 0, 1}).
 
 %%%----------------------------------------------------------------------
