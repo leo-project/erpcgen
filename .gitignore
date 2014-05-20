@@ -4,6 +4,7 @@
 ebin
 .eunit/
 deps/
+rpc_server/
 rpc/pmap.hrl
 rpc/pmap_clnt.erl
 rpc/pmap_xdr.erl

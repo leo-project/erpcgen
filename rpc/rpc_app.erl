@@ -22,9 +22,10 @@ start() ->
     application:start(?MODULE).
 
 %% Callback  for application
-start(_Type, Args) ->
+start(_Type, _Args) ->
+    {ok, Args}= application:get_env(rpc_server, args),
     NewArgs = start_rpc_server(Args),
-    {ok, Pid} = rpc_sup:start_link(),
+    {ok, Pid} = rpc_server_sup:start_link(),
     {ok, Pid, #state{args = NewArgs}}.
 
 prep_stop(#state{args = Args}) ->

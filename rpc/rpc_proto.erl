@@ -83,8 +83,8 @@ wait_request(Socket, Transport, State) ->
     case Transport:recv(Socket, 0, infinity) of
         {ok, Data} ->
             %% First, get the Record Marking 32-bit header
-            Last = 1, % FIXME: for now...
             <<Last:1/integer, _Len:31/integer, RpcMsg/binary>> = Data,
+            %Last = 1, % FIXME: for now...
             NewState = handle_msg(RpcMsg, Socket, sock, State),
             wait_request(Socket, Transport, NewState);
         {error, _} ->
