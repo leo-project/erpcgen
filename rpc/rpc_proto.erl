@@ -9,13 +9,6 @@
 %% Internal use
 -export([init/4]).
 
--record(state, {
-    mod,
-    state,
-    prg_num,
-    prg_vsns
-}).
-
 -record(client, {
     sock,
     addr,  % {Ip, Port} for udp, 'sock' for tcp
@@ -24,6 +17,7 @@
 
 % comment out for debug
 %%%-include("rpc.hrl").
+-include("rpc_app.hrl").
 % add define for debug
 
 -define(RPC_VERSION_2, 2).
@@ -107,16 +101,16 @@ handle_msg(Msg, Sock, Addr, S) ->
     case catch handle_msg1(Msg, Sock, Addr, S) of
 	{accepted, {Status, Bytes, NState}, Clnt} ->
 	    do_reply(Status, Bytes, Clnt),
-	    S#state{state = NState};
+	    S#rpc_app_arg{state = NState};
 	{accepted, {_ErrorStatus, _ErrorDetail} = ErrorRep, Clnt} ->
         do_reply(ErrorRep, Clnt),
         S;
 	{rejected, Clnt, RejectBody, NState} ->
 	    Reply = {Clnt#client.xid, {'REPLY', {'MSG_DENIED', RejectBody}}},
 	    send_reply(Clnt, rpc_xdr:enc_rpc_msg(Reply)),
-	    S#state{state = NState};
+	    S#rpc_app_arg{state = NState};
 	{noreply, NState} -> % the callback replies later
-	    S#state{state = NState};
+	    S#rpc_app_arg{state = NState};
 	{'EXIT', Reason} ->
 	    log_error(S, {rpc_msg, Reason}),
 	    S
@@ -133,7 +127,7 @@ handle_msg1(Msg, Sock, Addr, S) ->
     Clnt1 = chk_auth(Cred, Verf, Clnt0),
     Fun = chk_prg(Prg, Vsn, S, Clnt1),
     %% Ok, we're ready to call the implementation
-    case (catch apply(S#state.mod, Fun, [Proc,Msg,Off,Clnt1,S#state.state])) of
+    case (catch apply(S#rpc_app_arg.mod, Fun, [Proc,Msg,Off,Clnt1,S#rpc_app_arg.state])) of
 	X = {success, _Bytes, _NState} ->
 	    {accepted, X, Clnt1};
 	{garbage_args, NState} ->
@@ -143,8 +137,8 @@ handle_msg1(Msg, Sock, Addr, S) ->
 	{error, NState} ->
 	    {accepted, {error, [], NState}, Clnt1};
 	{'EXIT', Reason} ->
-	    log_error(S, {S#state.mod, Reason}),
-	    {accepted, {error, [], S#state.state}, Clnt1}
+	    log_error(S, {S#rpc_app_arg.mod, Reason}),
+	    {accepted, {error, [], S#rpc_app_arg.state}, Clnt1}
     end.
     
 do_reply(ErrorRep, Clnt) ->
@@ -179,16 +173,16 @@ chk_auth(_,_, Clnt) -> throw({rejected, Clnt, {'AUTH_ERROR', 'AUTH_TOOWEAK'}}).
 
 chk_prg(Prg, Vsn, S, Clnt) ->
     if
-	Prg /= S#state.prg_num ->
+	Prg /= S#rpc_app_arg.prg_num ->
 	    throw({accepted, {'PROG_UNAVAIL', void}, Clnt});
 	true ->
-	    case lists:keysearch(Vsn, 1, S#state.prg_vsns) of
+	    case lists:keysearch(Vsn, 1, S#rpc_app_arg.prg_vsns) of
 		{value, {_, Fun}} -> Fun;
 		_ ->
             throw({accepted,
                 {'PROG_MISMATCH', 
-                      {element(1, hd(S#state.prg_vsns)),
-                       element(1, lists:last(S#state.prg_vsns))}}, Clnt})
+                      {element(1, hd(S#rpc_app_arg.prg_vsns)),
+                       element(1, lists:last(S#rpc_app_arg.prg_vsns))}}, Clnt})
 	    end
     end.
     
@@ -201,8 +195,8 @@ send_reply(#client{sock = S, addr = {Ip, Port}}, Reply) ->
 
 log_error(S, Term) ->
     error_logger:format("rpc_server: prog:~p vsns:~p ~p\n", 
-			[S#state.prg_num,
-			 S#state.prg_vsns,
+			[S#rpc_app_arg.prg_num,
+			 S#rpc_app_arg.prg_vsns,
 			 Term]).
 
 io_list_len(L) -> io_list_len(L, 0).

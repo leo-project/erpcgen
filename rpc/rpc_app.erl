@@ -1,27 +1,14 @@
 -module(rpc_app).
 -behaviour(application).
 
+-include("rpc_app.hrl").
+
 % API
 -export([start/0]).
 % Callback for application
 -export([start/2, prep_stop/1, stop/1]).
 
 -define(LOCALHOST_ADDR, {127, 0, 0, 1}).
-
--record(rpc_app_arg, {
-    ref          :: any(),
-    acceptor_num :: pos_integer(),
-    trans_opts   :: list(proplists:property()),
-    proto_opts   :: list(proplists:property()),
-    prg_num      :: pos_integer(),
-    prg_name     :: atom(),
-    prg_vsns     :: list(atom()),
-    vsn_lo       :: pos_integer(),
-    vsn_hi       :: pos_integer(),
-    use_pmap     :: boolean(),
-    mod          :: module(),
-    init_args    :: list()
-}).
 
 -type rpc_app_args() :: list(#rpc_app_arg{}).
 
@@ -58,24 +45,21 @@ start_rpc_server([#rpc_app_arg{
                   ref          = Ref,
                   acceptor_num = NbAcceptors, 
                   trans_opts   = TransOpts,
-                  proto_opts   = ProtoOpts,
                   prg_name     = ProgName,
                   vsn_lo       = ProgVsnLo,
                   vsn_hi       = ProgVsnHi,
                   use_pmap     = UsePmap,
                   mod          = Mod,
                   init_args    = InitArgs} = Arg|Tail], Acc) ->
-    {ok, InitRet} = apply(Mod, init, [InitArgs]),
+    {ok, State} = apply(Mod, init, [InitArgs]),
     PrgVsns = lists:map(
         fun(V) ->
             {V, list_to_atom(atom_to_list(ProgName) ++ "_" ++ 
                      integer_to_list(V))}
         end, lists:seq(ProgVsnLo, ProgVsnHi)),
-    NewProtoOpts = [{mod, Mod},{init_ret, InitRet}|ProtoOpts],
-    NewArg = Arg#rpc_app_arg{prg_vsns = PrgVsns},
-
+    NewArg = Arg#rpc_app_arg{prg_vsns = PrgVsns, state = State},
     %% start server via ranch
-    ranch:start_listener(Ref, NbAcceptors, ranch_tcp, TransOpts, rpc_proto, NewProtoOpts),
+    ranch:start_listener(Ref, NbAcceptors, ranch_tcp, TransOpts, rpc_proto, NewArg),
     register_with_portmapper(NewArg, UsePmap),
     start_rpc_server(Tail, [NewArg|Acc]).
 
