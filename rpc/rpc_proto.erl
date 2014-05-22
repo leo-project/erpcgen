@@ -77,17 +77,33 @@ reply(Clnt, Status, Bytes) ->
 %%----------------------------------------------------------------------
 init(Ref, Socket, Transport, State) ->
     ok = ranch:accept_ack(Ref),
-    wait_request(Socket, Transport, State).
+    wait_request(<<>>, Socket, Transport, State).
     
-wait_request(Socket, Transport, State) ->
-    case Transport:recv(Socket, 0, infinity) of
-        {ok, Data} ->
-            %% First, get the Record Marking 32-bit header
-            <<Last:1/integer, _Len:31/integer, RpcMsg/binary>> = Data,
-            %Last = 1, % FIXME: for now...
-            NewState = handle_msg(RpcMsg, Socket, sock, State),
-            wait_request(Socket, Transport, NewState);
-        {error, _} ->
+wait_request(Buffer, Socket, Transport, State) ->
+    %% First, get the Record Marking 32-bit header
+    case Transport:recv(Socket, 4, infinity) of
+        {ok, <<Last:1/integer, Len:31/integer>>} ->
+            %% Second, get the fragment data which size is `Len`
+            case Transport:recv(Socket, Len, infinity) of
+                {ok, Data} ->
+                    case Last of
+                        0 ->
+                            %% wait next fragment
+                            wait_request(<<Buffer/binary, Data/binary>>,
+                                         Socket,
+                                         Transport,
+                                         State);
+                        1 ->
+                            %% Received all fragments, we can process those as one rpc message
+                            NewState = handle_msg(<<Buffer/binary, Data/binary>>, Socket, sock, State),
+                            wait_request(<<>>, Socket, Transport, NewState)
+                    end;
+                {error, Reason} ->
+	                log_error(State, {recv_error, Reason}),
+                    Transport:close(Socket)
+            end;
+        {error, Reason} ->
+	        log_error(State, {recv_error, Reason}),
             Transport:close(Socket)
     end.
 
