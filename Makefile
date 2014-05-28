@@ -17,10 +17,8 @@ deps : $(REBAR)
 
 compile: $(REBAR) deps
 	@$(REBAR) compile
-
-rpc: compile $(RPC_SRC_FILES)
-	erl -noshell -pa ../ebin -eval 'file:set_cwd("rpc")' -eval 'erpcgen:file(pmap, [xdrlib,clnt])' -s init stop
-	erl -noshell -pa ../ebin -eval 'file:set_cwd("rpc")' -eval 'erpcgen:file(rpc, [xdrlib,clnt])' -s init stop
+	@erl -noshell -pa ../ebin -eval 'file:set_cwd("rpc")' -eval 'erpcgen:file(pmap, [xdrlib,clnt])' -s init stop
+	@erl -noshell -pa ../ebin -eval 'file:set_cwd("rpc")' -eval 'erpcgen:file(rpc, [xdrlib,clnt])' -s init stop
 	@mkdir -p rpc_server/src
 	@cp -r rpc/* rpc_server/src/
 	@$(REBAR) compile
