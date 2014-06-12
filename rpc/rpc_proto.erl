@@ -99,11 +99,11 @@ wait_request(Buffer, Socket, Transport, State) ->
                             wait_request(<<>>, Socket, Transport, NewState)
                     end;
                 {error, Reason} ->
-	                log_error(State, {recv_error, Reason}),
+	                log_error("wait_request/4", State, {recv_error, Reason}),
                     Transport:close(Socket)
             end;
         {error, Reason} ->
-	        log_error(State, {recv_error, Reason}),
+	        log_error("wait_request/4", State, {recv_error, Reason}),
             Transport:close(Socket)
     end.
 
@@ -125,7 +125,7 @@ handle_msg(Msg, Sock, Addr, S) ->
 	{noreply, NState} -> % the callback replies later
 	    S#rpc_app_arg{state = NState};
 	{'EXIT', Reason} ->
-	    log_error(S, {rpc_msg, Reason}),
+	    log_error("handle_msg/4", S, {rpc_msg, Reason}),
 	    S
     end.
 
@@ -150,7 +150,7 @@ handle_msg1(Msg, Sock, Addr, S) ->
 	{error, NState} ->
 	    {accepted, {error, [], NState}, Clnt1};
 	{'EXIT', Reason} ->
-	    log_error(S, {S#rpc_app_arg.mod, Reason}),
+	    log_error("handle_msg1/4", S, {S#rpc_app_arg.mod, Reason}),
 	    {accepted, {error, [], S#rpc_app_arg.state}, Clnt1}
     end.
     
@@ -206,11 +206,15 @@ send_reply(Clnt, Reply) when Clnt#client.addr == sock ->
 send_reply(#client{sock = S, addr = {Ip, Port}}, Reply) ->
     gen_udp:send(S, Ip, Port, Reply).
 
-log_error(S, Term) ->
-    error_logger:format("rpc_server: prog:~p vsns:~p ~p\n", 
+log_error(Fun, S, Term) ->
+    Cause = io_lib:format("rpc_server: prog:~p vsns:~p ~p\n", 
 			[S#rpc_app_arg.prg_num,
 			 S#rpc_app_arg.prg_vsns,
-			 Term]).
+			 Term]),
+    error_logger:error_msg("~p,~p,~p,~p~n",
+                           [{module, ?MODULE_STRING},
+                            {function, Fun},
+                            {line, ?LINE}, {body, Cause}]).
 
 io_list_len(L) -> io_list_len(L, 0).
 io_list_len([H|T], N) ->
