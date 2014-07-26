@@ -12,7 +12,7 @@
 %%
 %% Procedure:
 %%  {procedure,Line,Id, ProcNo, RetType,ArgTypes}
-%%   
+%%
 %% Possible Extensions: (forward)
 %%   typedef struct struct-name ['*'] identifier;
 %%   typedef union  union-name ['*'] identifier;
@@ -37,13 +37,13 @@
 %%  {optional,      Line, Type}
 %%
 Nonterminals
-declaration value opt_value type_specifier enum_type_spec struct_type_spec 
+declaration value opt_value type_specifier enum_type_spec struct_type_spec
 union_type_spec enum_body enum_decls struct_body struct_decls
-union_body case_decls default_decl constant_def type_def 
+union_body case_decls default_decl constant_def type_def
 definition specification program_def version_def version_defs
 procedure_def procedure_defs procedure_args.
 
-Terminals 
+Terminals
 '[' ']' '{' '}' '(' ')' '<' '>' '*' '=' ';' ':' ','
 'opaque' 'string' 'void' 'float' 'double' 'bool' 'int' 'hyper' 'unsigned'
 'enum' 'struct' 'union' 'case' 'default' 'typedef' 'switch'
@@ -66,7 +66,7 @@ declaration -> 'opaque' identifier '<' opt_value '>' :
 declaration -> 'opaque' identifier :
 	{val('$2'), line('$2'), {varray, line('$2'), infinity, opaque}}.
 declaration -> 'string' identifier :
-	{val('$2'), line('$2'), 
+	{val('$2'), line('$2'),
 		{varray, line('$2'), infinity, string}}.
 declaration -> 'string' identifier '<' opt_value '>' :
 	{val('$2'), line('$2'),
@@ -102,7 +102,7 @@ enum_type_spec -> 'enum' enum_body :  {enum, line('$1'),'$2'}.
 
 enum_body -> '{' enum_decls '}' : '$2'.
 
-enum_decls -> identifier '=' value ',' enum_decls : 
+enum_decls -> identifier '=' value ',' enum_decls :
 	[{val('$1'), line('$1'), '$3'} | '$5'].
 enum_decls -> identifier '=' value :
 	[{val('$1'), line('$1'), '$3'}].
@@ -129,13 +129,13 @@ case_decls -> 'case' value ':' declaration ';' :
 default_decl -> 'default' ':' declaration ';' : [{default,line('$1'),'$3'}].
 default_decl -> '$empty' : [].
 
-constant_def -> 'const' identifier '=' constant ';' : 
+constant_def -> 'const' identifier '=' constant ';' :
 	{const, line('$1'), val('$2'), val('$4')}.
 
-type_def -> 'typedef' declaration ';'       : 
+type_def -> 'typedef' declaration ';'       :
 	{Id, _, Type} = '$2', {typedef, line('$1'), Id, Type}.
 
-type_def -> 'enum' identifier enum_body ';' : 
+type_def -> 'enum' identifier enum_body ';' :
 	{typedef, line('$1'), val('$2'), {enum,line('$1'),'$3'}}.
 type_def -> 'struct' identifier struct_body ';' :
 	{typedef, line('$1'), val('$2'), {struct,line('$1'),'$3'}}.
@@ -153,7 +153,7 @@ version_defs -> version_def : ['$1'].
 
 version_def -> 'version' identifier '{' procedure_defs '}' '=' constant ';' :
 	{version, line('$2'), val('$2'), val('$7'), '$4'}.
-		
+
 procedure_def -> type_specifier identifier '(' procedure_args ')'
 	'=' constant ';' :
 	proc_def(line('$2'), val('$2'), val('$7'), '$1', '$4').

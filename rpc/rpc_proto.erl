@@ -78,7 +78,7 @@ reply(Clnt, Status, Bytes) ->
 init(Ref, Socket, Transport, State) ->
     ok = ranch:accept_ack(Ref),
     wait_request(<<>>, Socket, Transport, State).
-    
+
 wait_request(Buffer, Socket, Transport, State) ->
     %% First, get the Record Marking 32-bit header
     case Transport:recv(Socket, 4, infinity) of
@@ -153,7 +153,7 @@ handle_msg1(Msg, Sock, Addr, S) ->
 	    log_error("handle_msg1/4", S, {S#rpc_app_arg.mod, Reason}),
 	    {accepted, {error, [], S#rpc_app_arg.state}, Clnt1}
     end.
-    
+
 do_reply(ErrorRep, Clnt) ->
     Reply = accepted(Clnt, ErrorRep),
     send_reply(Clnt, rpc_xdr:enc_rpc_msg(Reply)).
@@ -167,7 +167,7 @@ do_reply(garbage_args, _, Clnt) ->
 do_reply(error, _, Clnt) ->
     Reply = accepted(Clnt, {'SYSTEM_ERR', void}),
     send_reply(Clnt, rpc_xdr:enc_rpc_msg(Reply)).
-    
+
 accepted(C, AcceptBody) ->
     {C#client.xid, {'REPLY', {'MSG_ACCEPTED', {C#client.rverf, AcceptBody}}}}.
 
@@ -193,12 +193,12 @@ chk_prg(Prg, Vsn, S, Clnt) ->
 		{value, {_, Fun}} -> Fun;
 		_ ->
             throw({accepted,
-                {'PROG_MISMATCH', 
+                {'PROG_MISMATCH',
                       {element(1, hd(S#rpc_app_arg.prg_vsns)),
                        element(1, lists:last(S#rpc_app_arg.prg_vsns))}}, Clnt})
 	    end
     end.
-    
+
 send_reply(Clnt, Reply) when Clnt#client.addr == sock ->
     Len = io_list_len(Reply),
     gen_tcp:send(Clnt#client.sock,
@@ -207,7 +207,7 @@ send_reply(#client{sock = S, addr = {Ip, Port}}, Reply) ->
     gen_udp:send(S, Ip, Port, Reply).
 
 log_error(Fun, S, Term) ->
-    Cause = io_lib:format("rpc_server: prog:~p vsns:~p ~p\n", 
+    Cause = io_lib:format("rpc_server: prog:~p vsns:~p ~p\n",
 			[S#rpc_app_arg.prg_num,
 			 S#rpc_app_arg.prg_vsns,
 			 Term]),

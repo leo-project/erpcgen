@@ -27,12 +27,12 @@ scan(File, String) ->
 	{error, Description} ->
 	    {Line, Message} = Description,
 	    {error, {Line, File, Message}};
-	{'EXIT', Error} -> 
+	{'EXIT', Error} ->
 	    io:format("xdr_scan: internal error : ~p~n", [Error]),
 	    {error, {0, ?MODULE, "internal error"}}
     end.
 
-format_error(Message) -> 
+format_error(Message) ->
     Message.
 
 
@@ -40,7 +40,7 @@ scan([$/,$* | Cs], Ts, Line) -> scan_comment(Cs, Ts, Line);
 scan([$  | Cs], Ts, Line) -> scan(Cs, Ts, Line);
 scan([$\t | Cs], Ts, Line) -> scan(Cs, Ts, Line);
 scan([$\n | Cs], Ts, Line) -> scan(Cs, Ts, Line+1);
-scan([C | Cs], Ts, Line) when C >= $A, C =< $Z -> 
+scan([C | Cs], Ts, Line) when C >= $A, C =< $Z ->
     scan_identifier(Cs, [C], Ts, Line);
 scan([C | Cs], Ts, Line) when C >= $a, C =< $z ->
     scan_identifier(Cs, [C], Ts, Line);
@@ -59,13 +59,13 @@ scan([], Ts, Line) ->
 %%
 %% Comments
 %%
-scan_comment([$*,$/ | Cs], Ts, Line) -> 
+scan_comment([$*,$/ | Cs], Ts, Line) ->
     scan(Cs, Ts, Line);
-scan_comment([$\n | Cs], Ts, Line) -> 
+scan_comment([$\n | Cs], Ts, Line) ->
     scan_comment(Cs,Ts,Line+1);
-scan_comment([_ | Cs], Ts, Line) -> 
+scan_comment([_ | Cs], Ts, Line) ->
     scan_comment(Cs, Ts, Line);
-scan_comment([], _Ts, Line) -> 
+scan_comment([], _Ts, Line) ->
     throw({error, {Line, ?MODULE, "comment not terminated"}}).
 
 %%
@@ -87,7 +87,7 @@ scan_identifier(Cs, Acc, Ts,  Line) ->
 
 
 %%
-%% Constant values 
+%% Constant values
 %%
 scan_constant([$x | Cs], Sign, 0, Ts, Line) ->
     scan_hex(Cs, Sign, 0, Ts, Line);

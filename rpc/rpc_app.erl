@@ -44,7 +44,7 @@ start_rpc_server([], Acc) ->
     Acc;
 start_rpc_server([#rpc_app_arg{
                   ref          = Ref,
-                  acceptor_num = NbAcceptors, 
+                  acceptor_num = NbAcceptors,
                   trans_opts   = TransOpts,
                   prg_name     = ProgName,
                   vsn_lo       = ProgVsnLo,
@@ -55,7 +55,7 @@ start_rpc_server([#rpc_app_arg{
     {ok, State} = apply(Mod, init, [InitArgs]),
     PrgVsns = lists:map(
         fun(V) ->
-            {V, list_to_atom(atom_to_list(ProgName) ++ "_" ++ 
+            {V, list_to_atom(atom_to_list(ProgName) ++ "_" ++
                      integer_to_list(V))}
         end, lists:seq(ProgVsnLo, ProgVsnHi)),
     NewArg = Arg#rpc_app_arg{prg_vsns = PrgVsns, state = State},

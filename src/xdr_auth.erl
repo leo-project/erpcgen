@@ -33,7 +33,7 @@ generate_secret_key() ->
       fun(_, Key) ->
 	      (Key bsl 8) + (random:uniform(256)-1)
       end, 0, lists:seq(1,24)).
-    
+
 %%
 %% Generate an 8-byte DES key from a 192 bit key
 %%
@@ -47,7 +47,7 @@ des_key(X, N, P, DKs) ->
 %% X^N mod M (Fix better version)
 
 pow(X, 1, M) -> X rem M;
-pow(X, N, M) when N band 1 == 1 -> 
+pow(X, N, M) when N band 1 == 1 ->
     Y = pow(X, N bsr 1, M),
     Y*Y*X rem M;
 pow(X, N, M) ->
