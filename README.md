@@ -1,6 +1,6 @@
 # erpcgen
 
 ## Overview
-### Fetures
+### Features
 *under construction*
 
