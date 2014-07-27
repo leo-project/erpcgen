@@ -12,7 +12,7 @@
 
 -compile(export_all).
 
--record(grec, 
+-record(grec,
 	{
 	 var = 1    %% variable number for temporary variables
 	}).
@@ -72,11 +72,11 @@ mkfield(F)         ->  {record_field,0,mkatom(F)}.
 
 mkint2(infinity) -> mkatom(infinity);
 mkint2(Int) -> mkint(Int).
-    
-%% Common constructs...     
+
+%% Common constructs...
 mkbinoff(Off) -> mkbinelem(mkvar('_'), Off, [binary]).
 mkbintail() -> mkbinelem(mkvar('_'), default, [binary]).
-     
+
 mkexitlimit() ->
     mkcall(exit, [mktuple([mkatom(xdr), mkatom(limit)])]).
 
@@ -91,12 +91,12 @@ tolower([C|Cs]) -> [C | tolower(Cs)];
 tolower([]) -> [].
 
 genname(Name,Vi) ->
-    list_to_atom(concat([tolower(Name), "_", Vi])). 
+    list_to_atom(concat([tolower(Name), "_", Vi])).
 
 %% ------------------------------------------------------------------------
 %%
 %%                         ENCODE
-%% 
+%%
 %% ------------------------------------------------------------------------
 
 %%
@@ -165,7 +165,7 @@ enc_prim_type({array, N, opaque}, V, R) ->
 %%	true -> exit({xdr, limit})
 %%   end
 %% end
-%% 
+%%
 %% If Max == infinity:
 %% begin
 %%   Sz = io_list_len(V),
@@ -178,7 +178,7 @@ enc_prim_type({varray, Max, opaque}, V, R) ->
     Ret = mklist([mkbin([mkbinelem(Sz, mkint(32), [unsigned])]),
 		  V,
 		  mkcall(enc_align, [Sz])]),
-    if Max == infinity -> 
+    if Max == infinity ->
 	    {mkblock([mkmatch(Sz, mkcall(io_list_len, [V])),
 		      Ret]), R1};
        true ->
@@ -226,7 +226,7 @@ enc_type({enum,Nums},V,R) ->
 			    [mkbin([mkbinelem(mkint(Val),mkint(32), default)])])
 	   end, Nums),
     {mkcase(V, CL), R};
-    
+
 %%
 %% array:
 %% if length(V) == N ->
@@ -367,7 +367,7 @@ enc_type({optional,Type}, V0, R0) ->
 %% ------------------------------------------------------------------------
 %%
 %%                         DECODE
-%% 
+%%
 %% ------------------------------------------------------------------------
 
 %% generate decoder of type or program.
@@ -401,7 +401,7 @@ is_prim_dec_p(double)             -> true;
 is_prim_dec_p(bool)               -> true;
 is_prim_dec_p({array, _N, opaque}) -> true;
 is_prim_dec_p(_) -> false.
-     
+
 
 %% <<_:I_Off/binary, Val:Sz/Sign, _/binary>> = B,
 dec_prim_int(I_Bin, I_Off, O_Val, Sz, Sign, R) ->
@@ -457,7 +457,7 @@ dec_prim_type(bool, I_Bin, I_Off, O_Val, R0) ->
      R1};
 
 %% opaque[N] : N is the fixed size length
-%% 
+%%
 %% <<_:Off/binary, Val:N/binary, _/binary>> = B,
 %% NOff = Off + ?align(N)).
 dec_prim_type({array, N, opaque}, I_Bin, I_Off, O_Val, R) ->
@@ -467,11 +467,11 @@ dec_prim_type({array, N, opaque}, I_Bin, I_Off, O_Val, R) ->
 	     I_Bin),
      align(N),
      R}.
-				   				     
+
 
 %%-----------------------------------------------------------------
 %% Func: dec_type(Type, I_Bin, I_Off, R) -> {DecExpr, R'}
-%% Types: 
+%% Types:
 %% Purpose: DecExpr is an expression which decodes the type,
 %%          and returns {O_Val, O_NOff}
 %%-----------------------------------------------------------------
@@ -498,7 +498,7 @@ dec_enum_i2a(Nums, I_Int, R0) ->
     CL = map(fun({Tag,Val}) -> mkclause([mkint(Val)],[],[mkatom(Tag)]) end,
 	     Nums),
     {mkcase(I_Int, CL), R0}.
-    
+
 dec_compound(void, _I_Bin, I_Off,R) ->
     {mktuple([mkatom(void), I_Off]), R};
 dec_compound({type,Id}, I_Bin, I_Off, R)  ->
@@ -529,11 +529,11 @@ dec_compound({enum,Nums}, I_Bin, I_Off, R0) ->
 		   mkclause([E1],[],[E2])
 	   end, Nums),
     {mkblock([Match, mkcase(Enum, CL)]), R1};
-    
+
 %%
 %% fix array:
 %%
-%% map_elem(fun(I_Bin_F, I_Off_F) -> 
+%% map_elem(fun(I_Bin_F, I_Off_F) ->
 %%               dec_T(I_Bin_F, I_Off_F)
 %%          end, I_Bin, I_Off, infinity, Size)
 %%
@@ -619,7 +619,7 @@ dec_compound({varray,Max,Type}, I_Bin, I_Off, R0) ->
 	       [mkfun([mkclause([I_Bin_F, I_Off_F],[],[Dec])]),
 		I_Bin, mkop('+', I_Off, mkint(4)), mkint2(Max), N]),
     {mkblock([Match, E]), R4};
-    
+
 %%
 %% decode struct  - stmts depend on type:
 %% begin
@@ -633,12 +633,12 @@ dec_compound({varray,Max,Type}, I_Bin, I_Off, R0) ->
 %% end
 %%
 dec_compound({struct, Elems}, I_Bin, I_Off, R0) ->
-    {Decs, Vals, O_NOff, R1} = 
+    {Decs, Vals, O_NOff, R1} =
 	foldl(
 	  fun({_Id,Type}, {Decs, Vals, Off, RR1}) ->
 		  {Val_i,RR2} = genvar(RR1),
 		  {Off_i,RR3} = genvar(RR2),
-		  {Dec, RR4} = 
+		  {Dec, RR4} =
 		      mk_type_match(Type, I_Bin, Off, Val_i, Off_i, RR3),
 		  {[Dec | Decs], [Val_i|Vals], Off_i, RR4}
 	  end,
@@ -653,7 +653,7 @@ dec_compound({struct, Elems}, I_Bin, I_Off, R0) ->
 %%   <_:I_Off/binary, TagAsInt:32, _/binary>> = I_Bin,
 %%   T_Off = I_Off + 4,
 %%   case TagAsInt of
-%%     TagAsInt1 -> 
+%%     TagAsInt1 ->
 %%         begin % primitive example
 %%           <_:T_Off/binary, Val1:32/unsigned, _/binary>> = I_Bin,
 %%           O_NOff = T_Off + 4
@@ -688,7 +688,7 @@ dec_compound({union, _X={{_DId,DT}, Elems}}, I_Bin, I_Off, R0) ->
 	       end,
     {TagMatch, 4, R5} = dec_prim_type(PrimType, I_Bin, I_Off, Tag, R4),
     TOffAssign = mkmatch(T_Off, mkop('+', I_Off, mkint(4))),
-    {CL,R6} = 
+    {CL,R6} =
 	foldr(
 	  fun ({{default,_},{_,Type}},{CL0,RR0}) ->
 		  {Dec, RR1} =
@@ -745,7 +745,7 @@ dec_compound({optional,Type}, I_Bin, I_Off, R0) ->
 			     [Dec])])]),
      R3}.
 
-    
+
 %% Generates a stmt as (compound)
 %%   {O_Val, O_NOff} = dec_T1(I_Bin, I_Off)
 %% or (primitive, example)
@@ -796,7 +796,7 @@ clnt_versions([], _, Fs0) -> Fs0.
 %% Name_<Vi>(Rpc, V1,V2,...,Vn) ->
 %%   Args = [enc_T1(V1), enc_T2(V2), ..., enc_Tn(Vn) ]
 %%   case rpc_client:call(Clnt, Proc, Args) of
-%%     {ok, ResBin} -> 
+%%     {ok, ResBin} ->
 %%         {Reply,_} = dec_T(ResBin, 0),
 %%         {ok, Reply}
 %%     Error -> Error
@@ -829,13 +829,13 @@ clnt_call(FName,Args,Ret,Proc,_Ver,_Prog) ->
 			    [mkmatch(mktuple([mkvar('Reply'),mkvar('_')]),Dec),
 			     mktuple([mkatom(ok),mkvar('Reply')])]),
 		   mkclause([mkvar('Error')],[],[mkvar('Error')]) ]),
-    F0 = mkfunction(FName, length(Args)+1, 
-		    [mkclause([mkvar('Clnt')|VL], [], 
-			      [mklocalcall(FName, 
-					   [mkvar('Clnt') | VL] ++ 
+    F0 = mkfunction(FName, length(Args)+1,
+		    [mkclause([mkvar('Clnt')|VL], [],
+			      [mklocalcall(FName,
+					   [mkvar('Clnt') | VL] ++
 					   [mkatom(infinity)])])]),
-    F1 = mkfunction(FName, length(Args)+2, 
-		    [mkclause([mkvar('Clnt')|VL]++[mkvar('Timeout')], [], 
+    F1 = mkfunction(FName, length(Args)+2,
+		    [mkclause([mkvar('Clnt')|VL]++[mkvar('Timeout')], [],
 			      [Assign, Case])]),
     {F0, F1}.
 
@@ -878,7 +878,7 @@ svc_genprocs_gs(Serv, Fs0) ->
 					   mkvar('Sock')]),
 				  mkvar('_')],
 				 [],
-				 [mkcall(erlang, send, 
+				 [mkcall(erlang, send,
 					 [mkatom(Serv),
 					  mktuple([mkatom(tcp_new),
 						   mkvar('Sock')])]),
@@ -887,7 +887,7 @@ svc_genprocs_gs(Serv, Fs0) ->
 					   mkvar('Sock')]),
 				  mkvar('_')],
 				 [],
-				 [mkcall(erlang, send, 
+				 [mkcall(erlang, send,
 					 [mkatom(Serv),
 					  mktuple([mkatom(tcp_closed),
 						   mkvar('Sock')])]),
@@ -928,9 +928,9 @@ svc_versions_gen([], _, _, Fs0, _) -> Fs0.
 %%        ...
 %%        Reply = gen_server:call(prog_server, {proc_v,A1,A2..,An,Clnt}),
 %%        {success, reg_proto_xdr:enc_regres(Res), []};
-%%        
 %%
-svc_procs_gs([{procedure,Name,Proc,Ret,Args} | Ps], 
+%%
+svc_procs_gs([{procedure,Name,Proc,Ret,Args} | Ps],
 	  ProgId, Serv,Ver,Bin,Off,R0,CLs) ->
     CL = svc_call_gs(Name,Proc,Args,Ret,ProgId,Serv,Ver,Bin,Off,R0),
     svc_procs_gs(Ps, ProgId, Serv, Ver, Bin, Off, R0, [CL | CLs]);
@@ -940,7 +940,7 @@ svc_call_gs(Name,Proc,Args,Ret,_ProgId,Serv,Ver,Bin,Off,R0) ->
     {DL, As, _Off, R1} = gen_call_dec(Bin, Off, R0, Args),
     E1 = mkmatch(
 	   mkvar('_Res'),
-	   mkcall(gen_server, call, 
+	   mkcall(gen_server, call,
 		  [mkatom(Serv),
 		   mktuple([mkatom(genname(Name,Ver)) | reverse(As)] ++
 			   [mkvar('Clnt')]),
@@ -1000,7 +1000,7 @@ svc_versions_rs(Vsns, ProgId, Serv, Fs0) ->
 %%            {error, S'}
 %%        end;
 %%
-svc_procs_rs([{procedure,Name,Proc,Ret,Args} | Ps], 
+svc_procs_rs([{procedure,Name,Proc,Ret,Args} | Ps],
 	     ProgId, Serv,Ver,Bin,Off,R0,CLs) ->
     CL = svc_call_rs(Name,Proc,Args,Ret,ProgId,Serv,Ver,Bin,Off,R0),
     svc_procs_rs(Ps, ProgId, Serv, Ver, Bin, Off, R0, [CL | CLs]);

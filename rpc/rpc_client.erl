@@ -10,7 +10,7 @@
 -export([open/4, open/5, close/1, call/3, call/4]).
 -export([call_bulk/4, call_bulk/5]).
 -export([control/2, control/3,
-	 get_xid/1,  set_xid/2, 
+	 get_xid/1,  set_xid/2,
 	 get_vers/1,
 	 get_retry_timeout/1, set_retry_timeout/2,
 	 get_timeout/1, set_timeout/2,
@@ -136,7 +136,7 @@ open(Host, Program, Version, Proto, Port) ->
 %% Soft close of RPC Client - allows pending requests to wait for replies.
 %% Returns: ok
 
-close(Clnt) -> 
+close(Clnt) ->
     gen_server:call(Clnt, close, infinity).
 
 %% Make and RPC call and wait for the reply.
@@ -606,7 +606,7 @@ do_retry(Xid, State) ->
 	false ->
 	    {noreply, State}
     end.
-	    
+
 do_timeout(Xid, State) ->
     case keysearchdel(Xid, #pending.xid, State#state.pending) of
 	{Pend, Rest} ->

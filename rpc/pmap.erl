@@ -16,7 +16,7 @@
 
 open(Host) -> open(Host, tcp).
 
-open(Host, Proto) -> 
+open(Host, Proto) ->
     rpc_client:open(Host, ?PMAP_PROG, ?PMAP_VERS, Proto, ?PMAP_PORT).
 
 close(Clnt) ->
@@ -40,7 +40,7 @@ getport(Clnt, Prog, Vers, Proto) ->
 	    Error
     end.
 
-set(Clnt,Prog,Vers,Proto,Port) -> 
+set(Clnt,Prog,Vers,Proto,Port) ->
     NProto = proto(Proto),
     pmap_clnt:pmapproc_set_2(Clnt,{Prog, Vers, NProto, Port}).
 
@@ -65,12 +65,12 @@ dump_fmt(Clnt) ->
     end.
 
 fmt_list(List) ->
-    io:format(" ~-15s ~-10s ~-5s ~-5s~n", 
+    io:format(" ~-15s ~-10s ~-5s ~-5s~n",
 	      ["program", "version", "proto", "port"]),
     io:format(" ~s~n", [lists:duplicate(38,$-)]),
     lists:foreach(
       fun({Prog,Ver,Proto,Port}) ->
-	      io:format(" ~-15s ~-10w ~-5s ~-5w~n", 
+	      io:format(" ~-15s ~-10w ~-5s ~-5w~n",
 			[prog(Prog), Ver, Proto, Port])
       end, List).
 
@@ -83,7 +83,7 @@ dump_list({Mapping, Next}) ->
 	_ ->
 	    [Mapping | dump_list(Next)]
     end;
-dump_list(void) -> 
+dump_list(void) ->
     [].
 
 
