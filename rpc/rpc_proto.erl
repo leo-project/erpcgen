@@ -98,10 +98,14 @@ wait_request(Buffer, Socket, Transport, State) ->
                             NewState = handle_msg(<<Buffer/binary, Data/binary>>, Socket, sock, State),
                             wait_request(<<>>, Socket, Transport, NewState)
                     end;
+                {error, closed} ->
+                    Transport:close(Socket);
                 {error, Reason} ->
 	                log_error("wait_request/4", State, {recv_error, Reason}),
                     Transport:close(Socket)
             end;
+        {error, closed} ->
+            Transport:close(Socket);
         {error, Reason} ->
 	        log_error("wait_request/4", State, {recv_error, Reason}),
             Transport:close(Socket)
