@@ -16,7 +16,7 @@
 %% options:   hrl          -- generate proto.hrl
 %%            clnt         -- generate proto_clnt.erl
 %%            svc          -- generate proto_svc.erl, user impl. gen_server
-%%            svc_callback -- generate proto_svc.erl, user impl. rpc_server
+%%            svc_callback -- generate proto_svc.erl, user impl. nfs_rpc_server
 %%            xdr          -- generate proto_xdr.erl
 %%            trace        -- make stubs profilable via 'trace' option
 %%            xdr_inc      -- generate proto_xdr.hrl
@@ -103,7 +103,7 @@ generate(Base, Spec, Env, Opts) ->
       fun(hrl)  -> gen_hrl(Base, Spec,  Env, Opts);
 	 (clnt) -> gen_clnt(Base, Spec, Env, Opts);
 	 (svc) ->  gen_svc(Base, Spec,  Env, Opts, gen_server);
-	 (svc_callback) ->  gen_svc(Base, Spec,  Env, Opts, rpc_server);
+	 (svc_callback) ->  gen_svc(Base, Spec,  Env, Opts, nfs_rpc_server);
 	 (xdr) ->  gen_xdr(Base, Spec,  Env, Opts);
 	 (xdr_inc) -> gen_xdr_inc(Base, Spec,  Env, Opts);
 	 (svc_stub) -> gen_stub(Base, Spec, Env, Opts);
@@ -421,7 +421,7 @@ gen_svc(Base, Spec, _Env, Opts, Type) ->
 %%      gen_server:call(prog_server, {proc_2, Args}, infinity)
 %%      gen_server:call(prog_server, {proc_2, Args}, infinity)
 %%
-%% If Type == rpc_server:
+%% If Type == nfs_rpc_server:
 %%
 %%   implementation module must be called:
 %%        prog_server
