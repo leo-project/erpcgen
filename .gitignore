@@ -4,13 +4,6 @@
 ebin
 .eunit/
 deps/
-rpc_server/
-rpc/pmap.hrl
-rpc/pmap_clnt.erl
-rpc/pmap_xdr.erl
-rpc/rpc.hrl
-rpc/rpc_clnt.erl
-rpc/rpc_xdr.erl
 src/xdr_parse.erl
 examples/*/*.[eh]rl
 .rebar/
