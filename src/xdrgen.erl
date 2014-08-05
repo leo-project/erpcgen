@@ -795,7 +795,7 @@ clnt_versions([], _, Fs0) -> Fs0.
 %%
 %% Name_<Vi>(Rpc, V1,V2,...,Vn) ->
 %%   Args = [enc_T1(V1), enc_T2(V2), ..., enc_Tn(Vn) ]
-%%   case rpc_client:call(Clnt, Proc, Args) of
+%%   case nfs_rpc_client:call(Clnt, Proc, Args) of
 %%     {ok, ResBin} ->
 %%         {Reply,_} = dec_T(ResBin, 0),
 %%         {ok, Reply}
@@ -820,7 +820,7 @@ clnt_call(FName,Args,Ret,Proc,_Ver,_Prog) ->
     {O_Res,R3} = genvar(R2),
     Assign = mkmatch(I_Args, EL),
     {Dec,_R4} = dec_type(Ret, O_Res, mkint(0), R3),
-    Case = mkcase(mkcall(rpc_client, call,
+    Case = mkcase(mkcall(nfs_rpc_client, call,
 			 [mkvar('Clnt'),
 			  mkint(Proc),
 			  I_Args,
@@ -847,7 +847,7 @@ svc_gen_funcs(Type, Base, Fs0) ->
     Serv = filename:basename(Base ++ "_server"),
     if Type == gen_server ->
 	    svc_genprocs_gs(Serv, Fs0);
-       Type == rpc_server ->
+       Type == nfs_rpc_server ->
 	    svc_genprocs_rs(Serv, Fs0)
     end.
 
@@ -855,7 +855,7 @@ svc_prog({program,Id,_Prog,Vs},Type,Base,Fs0) ->
     Serv = filename:basename(Base ++ "_server"),
     if Type == gen_server ->
 	    svc_versions_gs(Vs, Id, Serv, Fs0);
-       Type == rpc_server ->
+       Type == nfs_rpc_server ->
 	    svc_versions_rs(Vs, Id, Serv, Fs0)
     end.
 
