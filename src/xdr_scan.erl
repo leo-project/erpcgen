@@ -13,9 +13,9 @@ file(File) when is_atom(File) ->
     file(atom_to_list(File));
 file(File) when is_list(File) ->
     case file:read_file(File) of
-	{ok, Bin} ->
-	    scan(File, binary_to_list(Bin));
-	Error -> Error
+        {ok, Bin} ->
+            scan(File, binary_to_list(Bin));
+        Error -> Error
     end.
 
 string(String) when is_list(String) ->
@@ -23,13 +23,13 @@ string(String) when is_list(String) ->
 
 scan(File, String) ->
     case catch scan(String, [], 1) of
-	{ok, Tokens} -> Tokens;
-	{error, Description} ->
-	    {Line, Message} = Description,
-	    {error, {Line, File, Message}};
-	{'EXIT', Error} ->
-	    io:format("xdr_scan: internal error : ~p~n", [Error]),
-	    {error, {0, ?MODULE, "internal error"}}
+        {ok, Tokens} -> Tokens;
+        {error, Description} ->
+            {Line, Message} = Description,
+            {error, {Line, File, Message}};
+        {'EXIT', Error} ->
+            io:format("xdr_scan: internal error : ~p~n", [Error]),
+            {error, {0, ?MODULE, "internal error"}}
     end.
 
 format_error(Message) ->
@@ -50,8 +50,8 @@ scan([$-, C | Cs], Ts, Line) when C >= $0, C =< $9 ->
     scan_constant(Cs, -1, C-$0, Ts, Line);
 scan([C | Cs], Ts, Line) ->
     case delimiter(C) of
-	false -> scan(Cs, [{C, Line} | Ts], Line);
-	Tok -> scan(Cs, [{Tok, Line} | Ts], Line)
+        false -> scan(Cs, [{C, Line} | Ts], Line);
+        Tok -> scan(Cs, [{Tok, Line} | Ts], Line)
     end;
 scan([], Ts, Line) ->
     {ok, lists:reverse([{'$end', Line} | Ts])}.
@@ -81,8 +81,8 @@ scan_identifier([$_ | Cs], Acc, Ts, Line) ->
     scan_identifier(Cs, [$_|Acc], Ts, Line);
 scan_identifier(Cs, Acc, Ts,  Line) ->
     case predefined(lists:reverse(Acc)) of
-	{true, Tok} -> scan(Cs, [{Tok, Line} | Ts], Line);
-	{false, Id} -> scan(Cs, [{identifier,Line,Id} | Ts], Line)
+        {true, Tok} -> scan(Cs, [{Tok, Line} | Ts], Line);
+        {false, Id} -> scan(Cs, [{identifier,Line,Id} | Ts], Line)
     end.
 
 
@@ -137,8 +137,6 @@ predefined("const") ->    {true, const};
 predefined("program") ->  {true, program};
 predefined("version") ->  {true, version};
 predefined(Id) ->         {false, Id}.
-
-
 
 
 delimiter($[) -> '[';

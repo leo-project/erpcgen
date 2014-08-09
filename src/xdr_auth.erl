@@ -31,7 +31,7 @@ generate_secret_key() ->
     random:seed(A,B,C),
     lists:foldl(
       fun(_, Key) ->
-	      (Key bsl 8) + (random:uniform(256)-1)
+              (Key bsl 8) + (random:uniform(256)-1)
       end, 0, lists:seq(1,24)).
 
 %%
