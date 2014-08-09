@@ -2,7 +2,7 @@
 {application, erpcgen,
  [
   {description, "Erlang RPC stub generator 'erpcgen'"},
-  {vsn, "0.2.2"},
+  {vsn, "0.2.3"},
   {registered, []},
   {applications, [kernel, stdlib]}
  ]
