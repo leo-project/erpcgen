@@ -1,9 +1,13 @@
 *.[oa]
 *.beam
 *.swp
-ebin
+ebin/
 .eunit/
 deps/
 src/xdr_parse.erl
 examples/*/*.[eh]rl
 .rebar/
+
+# rebar3
+_build/
+rebar.lock
