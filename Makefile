@@ -1,19 +1,32 @@
-.PHONY: deps compile
-REBAR := ./rebar
+.PHONY: all compile clean distclean dialyzer xref test
+
+REBAR := rebar3
 
 all: compile
 
-deps : $(REBAR)
-	@$(REBAR) get-deps
-
-compile: $(REBAR) deps
+compile:
 	@$(REBAR) compile
-clean: $(REBAR)
+
+clean:
 	@$(REBAR) clean
-	@rm -f $(RPC_DST_FILES)
 	@rm -rf rpc_server
-distclean:
-	@$(REBAR) delete-deps
-	@rm -f $(RPC_DST_FILES)
+	@rm -f test/test_xdr.erl test/test.hrl test/test_clnt.erl test/test_svc.erl
+
+distclean: clean
+	@rm -rf _build
 	@rm -rf rpc_server
-	@$(REBAR) clean
+
+dialyzer:
+	@$(REBAR) dialyzer
+
+xref:
+	@$(REBAR) xref
+
+test: compile
+	@cd test && \
+	erl -pa ../_build/default/lib/erpcgen/ebin -noshell -eval \
+		"erpcgen:file(test, [xdrlib]), halt()."
+	@erlc -pa _build/default/lib/erpcgen/ebin -o test test/test_xdr.erl
+	@erlc -pa _build/default/lib/erpcgen/ebin -o test test/test.erl
+	@erl -pa _build/default/lib/erpcgen/ebin -pa test -noshell -eval \
+		"test:all(), io:format(\"All tests passed!~n\"), halt()."

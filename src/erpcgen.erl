@@ -30,17 +30,14 @@
 -module(erpcgen).
 -behavior(application).
 
+-compile({no_auto_import,[error/3]}).
+
 -export([start/0, start/2, stop/1]).
 -export([file/1, file/2, file/3]).
 
--import(lists, [map/2, filter/2, foreach/2, reverse/1]).
+-import(lists, [map/2, foreach/2, reverse/1]).
 -import(lists, [member/2, keysearch/3, concat/1, flatten/1]).
 -import(xdrgen, [genname/2]).
--import(xdrgen, [mkfun/1, mkcall/2, mkcall/3, mkcase/2, mkif/1, mkvar/1]).
--import(xdrgen, [mkatom/1, mkatom/2, mkint/1, mkfloat/1, mkop/3, mkop/2]).
--import(xdrgen, [mkclause/3, mktuple/1, mkcons/2, mknil/0, mklist/1]).
--import(xdrgen, [mkmatch/2, mkblock/1, mkmodule/2, mkexport/2]).
--import(xdrgen, [mkfunction/3]).
 
 %% Called by application startup.
 start() -> start(normal, []).
