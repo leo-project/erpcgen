@@ -6,11 +6,9 @@
 
 -export([encode/2, decode/2]).
 -export([clnt/2, svc_gen_funcs/3, svc_prog/4]).
+-export([genname/2]).
 
 -import(lists, [map/2, foldl/3, foldr/3, reverse/1, concat/1]).
-
-
--compile(export_all).
 
 -record(grec,
         {
@@ -1014,12 +1012,13 @@ svc_call_rs(Name,Proc,Args,Ret,_ProgId,Serv,Ver,Bin,Off,R0) ->
     mkclause([mkint(Proc)], [], reverse(DL) ++ [E1]).
 
 
+%% Returns abstract form for alignment padding binary
 enc_align(Len) ->
     case Len rem 4 of
-        0 -> <<>>;
-        1 -> <<0,0,0>>;
-        2 -> <<0,0>>;
-        3 -> <<0>>
+        0 -> mkbin([]);
+        1 -> mkbin([mkbinelem(mkint(0), mkint(24), default)]);
+        2 -> mkbin([mkbinelem(mkint(0), mkint(16), default)]);
+        3 -> mkbin([mkbinelem(mkint(0), mkint(8), default)])
     end.
 
 

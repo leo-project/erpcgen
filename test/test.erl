@@ -8,7 +8,7 @@
 -module(test).
 -author('mbj@bluetail.com').
 
--compile(export_all).
+-export([all/0, tc/0, loop/1]).
 
 %% Uncomment if you run rpc-1.0
 %-define(rpc_10, true).
